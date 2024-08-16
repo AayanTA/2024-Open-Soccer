@@ -1,6 +1,20 @@
 # 2024-Open-Soccer - GundamFoot
 
-Useful Links:
+## Current Progress
+- Baseplate and Middle Plate assembled
+- Bottom layers in place
+- Wheels attached
+- Code for moving at a specified angle (needs to be tested)
+- Code for reading values from the IMU
+## To be done
+- Better solution for our wiring
+- Communicaton between Raspberry Pi and Pico
+- Design the top plate
+- Test movements
+- Respond to camera data, e.g. position of ball
+- Build a dribbler and kicker
+
+#### Useful Links:
 
 https://www.youtube.com/watch?v=fuTrGaSgjog
 
