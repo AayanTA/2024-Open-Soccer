@@ -1,0 +1,111 @@
+#include "Wire.h"
+#include "PowerfulBLDCdriver.h"
+
+PowerfulBLDCdriver motor1;
+PowerfulBLDCdriver motor2;
+PowerfulBLDCdriver motor3;
+PowerfulBLDCdriver motor4;
+
+void setup() {
+  Wire.setSCL(9);
+  Wire.setSDA(8);
+  Serial.begin(115200); // initialise serial
+  Wire.begin(); // initialise i2c0, make sure to look up the i2c pins of your microcontroller.
+  Wire.setClock(1000000); // set i2c speed to 1MHz
+  motor1.begin(25, &Wire); // motor1 has i2c address 25 and is using i2c0.
+  motor1.setCurrentLimitFOC(65536*2); // set current limit to 1 amp (only works in FOC mode)
+  motor1.setIdPidConstants(1500, 200); 
+  motor1.setIqPidConstants(1500, 200);
+  motor1.setSpeedPidConstants(4e-2, 4e-4, 3e-2); // Constants valid for FOC and Robomaster M2006 P36 motor only, see tuning constants document for more details
+  motor2.begin(27, &Wire); // motor1 has i2c address 25 and is using i2c0.
+  motor2.setCurrentLimitFOC(65536*2); // set current limit to 1 amp (only works in FOC mode)
+  motor2.setIdPidConstants(1500, 200); 
+  motor2.setIqPidConstants(1500, 200);
+  motor2.setSpeedPidConstants(4e-2, 4e-4, 3e-2); // Constants valid for FOC and Robomaster M2006 P36 motor only, see tuning constants document for more details
+  //motor3.begin(28, &Wire); // motor1 has i2c address 25 and is using i2c0.
+  //motor3.setCurrentLimitFOC(65536*2); // set current limit to 1 amp (only works in FOC mode)
+  //motor3.setIdPidConstants(1500, 200); 
+  //motor3.setIqPidConstants(1500, 200);
+  //motor3.setSpeedPidConstants(4e-2, 4e-4, 3e-2); // Constants valid for FOC and Robomaster M2006 P36 motor only, see tuning constants document for more details
+  //motor4.begin(26, &Wire); // motor1 has i2c address 25 and is using i2c0.
+  //motor4.setCurrentLimitFOC(65536*2); // set current limit to 1 amp (only works in FOC mode)
+  //motor4.setIdPidConstants(1500, 200); 
+  //motor4.setIqPidConstants(1500, 200);
+  //motor4.setSpeedPidConstants(4e-2, 4e-4, 3e-2); // Constants valid for FOC and Robomaster M2006 P36 motor only, see tuning constants document for more details
+  motor1.setELECANGLEOFFSET(1466742528); // set the ELECANGLEOFFSET calibration value. Each motor needs its own calibration value.
+  motor1.setSINCOSCENTRE(1249); // set the SINCOSCENTRE calibration value. Each motor needs its own calibration value.
+  motor1.configureOperatingModeAndSensor(3, 1); // configure FOC mode and sin/cos encoder
+  motor1.configureCommandMode(12); // configure speed command mode
+  motor2.setELECANGLEOFFSET(1393669888); // set the ELECANGLEOFFSET calibration value. Each motor needs its own calibration value.
+  motor2.setSINCOSCENTRE(1237); // set the SINCOSCENTRE calibration value. Each motor needs its own calibration value.
+  motor2.configureOperatingModeAndSensor(3, 1); // configure FOC mode and sin/cos encoder
+  motor2.configureCommandMode(12); // configure speed command mode
+  //motor3.setELECANGLEOFFSET(1315084800); // set the ELECANGLEOFFSET calibration value. Each motor needs its own calibration value.
+  //motor3.setSINCOSCENTRE(1224); // set the SINCOSCENTRE calibration value. Each motor needs its own calibration value.
+  //motor3.configureOperatingModeAndSensor(3, 1); // configure FOC mode and sin/cos encoder
+  //motor3.configureCommandMode(12); // configure speed command mode
+  //motor4.setELECANGLEOFFSET(1697132032); // set the ELECANGLEOFFSET calibration value. Each motor needs its own calibration value.
+  //motor4.setSINCOSCENTRE(1235); // set the SINCOSCENTRE calibration value. Each motor needs its own calibration value.
+  //motor4.configureOperatingModeAndSensor(3, 1); // configure FOC mode and sin/cos encoder
+  //motor4.configureCommandMode(12); // configure speed command mode
+
+  delay(500);
+}
+
+void setMotorSpeed(float angle) {
+  // If the motors are at a special angle in design
+  float motorAngle = 60 * (PI / 180.0);
+
+  // Convert angle to radians
+  float radian = (angle) * (PI / 180.0);
+
+  // Calculate motor speeds
+  float speed1 = -cos(radian + PI/6);
+  float speed2 = -sin(radian + PI/3);
+  //float speed3 = cos(radian + PI/6);
+  //float speed4 = sin(radian + PI/3);
+
+  // Calculate a multiplier to ensure motors are at maximum speed while maintaining angle ratio
+  float speedMultiplier = 1;
+
+  switch( abs(speed1) > abs(speed2) ) {
+    case false:
+      {
+      float speedMultiplier = 1/abs(speed2);
+      break;
+      }
+    case true:
+      {
+      float speedMultiplier = 1/abs(speed1);
+      break;
+      }
+    default:
+      {
+      float speedMultiplier = 1;
+      break;
+      }
+  }
+  
+  // Scale speeds to motor speed range
+  float maxSpeed = 90000000;
+  float scaledSpeed1 = speed1 * maxSpeed * speedMultiplier;
+  float scaledSpeed2 = speed2 * maxSpeed * speedMultiplier;
+  //float scaledSpeed3 = speed3 * maxSpeed * speedMultiplier;
+  //float scaledSpeed4 = speed4 * maxSpeed * speedMultiplier;
+
+  // Set the motor speeds
+  motor1.setSpeed(scaledSpeed1);
+  motor2.setSpeed(scaledSpeed2);
+  //motor3.setSpeed(scaledSpeed3);
+  //motor4.setSpeed(scaledSpeed4);
+
+  // Testing purposes
+  Serial.print(scaledSpeed1, scaledSpeed2);
+}
+
+void loop() {
+  // Set the desired angle here
+  float angle = 0; // Change this value to set a different angle
+  setMotorSpeed(angle);
+  delay(1000); // Adjust delay as needed
+}
