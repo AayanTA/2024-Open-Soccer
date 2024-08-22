@@ -69,15 +69,18 @@ void setMotorSpeed(float angle) {
 
   float speedMultiplier = 1;
 
-  // This does NOT WORK - fix later
-  //if ( abs(speed1) > abs(speed2) ) {
-  //  float speedMultiplier = 1/abs(speed1);
-  //} else if ( abs(speed2) > abs(speed1) {
-  //  float speedMultiplier = 1/abs(speed2);
-  //  }
-  
-  // Scale speeds to motor speed range
-  float maxSpeed = 90000000;
+  //Serial.println(speed1);
+
+  if ( abs(speed1) > abs(speed2) ) {
+    speedMultiplier = 1.0/abs(speed1);
+  } 
+  else( abs(speed2) > abs(speed1) ); {
+    speedMultiplier = 1.0/abs(speed2);
+  }
+  Serial.println(speedMultiplier);
+
+  // Scale speeds to motor speed range (max is 90000000)
+  float maxSpeed = 89900000;
 
   float scaledSpeed1 = speed1 * maxSpeed * speedMultiplier;
   float scaledSpeed2 = speed2 * maxSpeed * speedMultiplier;
