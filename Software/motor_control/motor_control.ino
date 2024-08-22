@@ -66,28 +66,19 @@ void setMotorSpeed(float angle) {
   //float speed4 = sin(radian + PI/3);
 
   // Calculate a multiplier to ensure motors are at maximum speed while maintaining angle ratio
+
   float speedMultiplier = 1;
 
-  switch( abs(speed1) > abs(speed2) ) {
-    case false:
-      {
-      float speedMultiplier = 1/abs(speed2);
-      break;
-      }
-    case true:
-      {
-      float speedMultiplier = 1/abs(speed1);
-      break;
-      }
-    default:
-      {
-      float speedMultiplier = 1;
-      break;
-      }
-  }
+  // This does NOT WORK - fix later
+  //if ( abs(speed1) > abs(speed2) ) {
+  //  float speedMultiplier = 1/abs(speed1);
+  //} else if ( abs(speed2) > abs(speed1) {
+  //  float speedMultiplier = 1/abs(speed2);
+  //  }
   
   // Scale speeds to motor speed range
   float maxSpeed = 90000000;
+
   float scaledSpeed1 = speed1 * maxSpeed * speedMultiplier;
   float scaledSpeed2 = speed2 * maxSpeed * speedMultiplier;
   //float scaledSpeed3 = speed3 * maxSpeed * speedMultiplier;
@@ -100,7 +91,8 @@ void setMotorSpeed(float angle) {
   //motor4.setSpeed(scaledSpeed4);
 
   // Testing purposes
-  Serial.print(scaledSpeed1, scaledSpeed2);
+  Serial.println(scaledSpeed1);
+  Serial.println(scaledSpeed2);
 }
 
 void loop() {
