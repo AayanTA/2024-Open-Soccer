@@ -4,10 +4,12 @@
 - Baseplate and Middle Plate assembled
 - Bottom layers in place
 - Wheels attached
-- Code for moving at a specified angle (needs to be tested)
+- Code for moving at a specified angle
 - Code for reading values from the IMU
+- Read distances from ToF sensor
 ## To be done
-- Better solution for our wiring
+- Localisation using ToF sensors
+- Correcting robot heading to face required direction (goal)
 - Communicaton between Raspberry Pi and Pico
 - Design the top plate
 - Test movements
