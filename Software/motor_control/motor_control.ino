@@ -52,6 +52,28 @@ void setup() {
   delay(500);
 }
 
+void spinAround(float speed) {
+  // Speed can be +1 or -1, +1 spins clockwise, -1 spins counterclockwise
+  
+  float speed1 = speed
+  float speed2 = speed
+  float speed3 = speed
+  float speed4 = speed
+
+  // Scale speeds to motor speed range (max is 90000000)
+  float maxSpeed = 45000000;
+
+  float scaledSpeed1 = speed1 * maxSpeed;
+  float scaledSpeed2 = speed2 * maxSpeed;
+  float scaledSpeed3 = speed3 * maxSpeed;
+  float scaledSpeed4 = speed4 * maxSpeed;
+  
+  motor1.setSpeed(scaledSpeed1);
+  motor2.setSpeed(scaledSpeed2);
+  motor3.setSpeed(scaledSpeed3);
+  motor4.setSpeed(scaledSpeed4);
+}
+
 void setMotorSpeed(float angle) {
   // If the motors are at a special angle in design
   float motorAngle = 60 * (PI / 180.0);
@@ -99,8 +121,9 @@ void setMotorSpeed(float angle) {
 }
 
 void loop() {
-  // Set the desired angle here
-  float angle = 90; // Change this value to set a different angle
-  setMotorSpeed(angle);
+  // Set the desired angle here (in degrees, 0-360)
+  float angle = 0; // Change this value to set a different angle
+  spinAround(1)
+  //setMotorSpeed(angle);
   delay(1000); // Adjust delay as needed
 }
