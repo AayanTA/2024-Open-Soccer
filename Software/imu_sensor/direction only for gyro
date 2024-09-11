@@ -87,6 +87,6 @@ void loop() {
     Serial.print(" degrees, Pitch: ");
     Serial.print(pitch);
     Serial.print(" degrees, Yaw: ");
-    Serial.println(yaw);
+    Serial.println(yaw); // yaw is here!
   }
 }
