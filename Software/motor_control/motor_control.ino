@@ -81,6 +81,9 @@ void setMotorSpeed(float angle) {
   // Convert angle to radians
   float radian = (angle) * (PI / 180.0);
 
+  // Get heading correction from IMU
+  headingCorrection = correctHeading();
+  
   // Calculate motor speeds
   float speed1 = cos(radian + PI/6);
   float speed2 = sin(radian + PI/3);
@@ -102,7 +105,7 @@ void setMotorSpeed(float angle) {
   Serial.println(speedMultiplier);
 
   // Scale speeds to motor speed range (max is 90000000)
-  float maxSpeed = 45000000;
+  float maxSpeed = 60000000;
 
   float scaledSpeed1 = speed1 * maxSpeed * speedMultiplier;
   float scaledSpeed2 = speed2 * maxSpeed * speedMultiplier;
@@ -118,6 +121,19 @@ void setMotorSpeed(float angle) {
   // Testing purposes
   Serial.println(scaledSpeed1);
   Serial.println(scaledSpeed2);
+}
+
+void correctHeading(float heading) {
+  // assuming heading is received from imu as pi to -pi, with 0 being straight (opposing wall)
+  // if not, then make it work !!!
+  float headingCorrection = heading/PI;
+
+  // Scale speeds to motor speed range (max is 90000000)
+  float maxSpinSpeed = 30000000;
+
+  float scaledHeadingCorrection = headingCorrection * maxSpinSpeed;
+  return scaledHeadingCorrection;
+  }
 }
 
 void loop() {
