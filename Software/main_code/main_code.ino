@@ -10,6 +10,8 @@ PowerfulBLDCdriver motor4;
 #include <Adafruit_BNO08x.h>
 #include <Wire.h>
 
+float headingCorrection = 0;
+
 #define BNO08X_RESET -1
 
 Adafruit_BNO08x bno08x(BNO08X_RESET);
@@ -116,7 +118,7 @@ void quaternionToEuler(float w, float x, float y, float z, float &roll, float &p
 }
 
 void spinAround(float speed) {
-  // Speed can be +1 or -1, +1 spins clockwise, -1 spins counterclockwise
+  // Speed can be between +1 and -1, +1 spins clockwise, -1 spins counterclockwise
   
   float speed1 = speed;
   float speed2 = speed;
@@ -175,12 +177,12 @@ void setMotorSpeed(float angle) {
   Serial.println(speedMultiplier);
 
   // Scale speeds to motor speed range (max is 90000000)
-  float maxSpeed = 60000000;
+  float maxSpeed = 45000000;
 
-  float scaledSpeed1 = speed1 * maxSpeed * speedMultiplier;
-  float scaledSpeed2 = speed2 * maxSpeed * speedMultiplier;
-  float scaledSpeed3 = speed3 * maxSpeed * speedMultiplier;
-  float scaledSpeed4 = speed4 * maxSpeed * speedMultiplier;
+  float scaledSpeed1 = speed1 * maxSpeed * speedMultiplier + headingCorrection;
+  float scaledSpeed2 = speed2 * maxSpeed * speedMultiplier + headingCorrection;
+  float scaledSpeed3 = speed3 * maxSpeed * speedMultiplier + headingCorrection;
+  float scaledSpeed4 = speed4 * maxSpeed * speedMultiplier + headingCorrection;
 
   // Set the motor speeds
   motor1.setSpeed(scaledSpeed1);
@@ -201,7 +203,7 @@ void correctHeading(float heading) {
   // Scale speeds to motor speed range (max is 90000000)
   float maxSpinSpeed = 30000000;
 
-  //float scaledHeadingCorrection = headingCorrection * maxSpinSpeed;
+  headingCorrection = heading * maxSpinSpeed;
   //return scaledHeadingCorrection;
 }
 
@@ -237,7 +239,8 @@ void loop() {
     Serial.print(" degrees, Yaw: ");
     Serial.println(yaw); // yaw is here!
 
-    spinAround(-yaw/180);
+    correctHeading(-yaw/180);
+    //spinAround(-yaw/180);
   }
-  
+  setMotorSpeed(angle);
 }
