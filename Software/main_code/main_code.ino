@@ -6,9 +6,41 @@ PowerfulBLDCdriver motor2;
 PowerfulBLDCdriver motor3;
 PowerfulBLDCdriver motor4;
 
+//yaw is the direction that we care abt
+#include <Adafruit_BNO08x.h>
+#include <Wire.h>
+
+#define BNO08X_RESET -1
+
+Adafruit_BNO08x bno08x(BNO08X_RESET);
+sh2_SensorValue_t sensorValue;
+
 void setup() {
+  
+  Serial.begin(115200);
+  while (!Serial)
+    delay(10); // will pause Zero, Leonardo, etc until serial console opens
+
+  Serial.println("Adafruit BNO08x test!");
+
   Wire.setSCL(9);
   Wire.setSDA(8);
+  Wire.begin();
+  
+  // Try to initialize!
+  if (!bno08x.begin_I2C(74, &Wire)) {
+    Serial.println("Failed to find BNO08x chip");
+    while (1) {
+      delay(10);
+    }
+  }
+  Serial.println("BNO08x Found!");
+
+  setReports();
+
+  Serial.println("Reading events");
+  delay(100);
+  
   Serial.begin(115200); // initialise serial
   Wire.begin(); // initialise i2c0, make sure to look up the i2c pins of your microcontroller.
   Wire.setClock(1000000); // set i2c speed to 1MHz
@@ -52,6 +84,66 @@ void setup() {
   delay(500);
 }
 
+
+
+void setReports(void) {
+  Serial.println("Setting desired reports");
+  if (!bno08x.enableReport(SH2_GEOMAGNETIC_ROTATION_VECTOR)) {
+    Serial.println("Could not enable geomagnetic rotation vector");
+  }
+}
+
+
+void quaternionToEuler(float w, float x, float y, float z, float &roll, float &pitch, float &yaw) {
+    // Roll (x-axis rotation)
+    float sinr_cosp = 2 * (w * x + y * z);
+    float cosr_cosp = 1 - 2 * (x * x + y * y);
+    roll = atan2(sinr_cosp, cosr_cosp);
+
+    // Pitch (y-axis rotation)
+    float sinp = 2 * (w * y - z * x);
+    pitch = fabs(sinp) >= 1 ? copysign(M_PI / 2, sinp) : asin(sinp);
+
+    // Yaw (z-axis rotation)
+    float siny_cosp = 2 * (w * z + x * y);
+    float cosy_cosp = 1 - 2 * (y * y + z * z);
+    yaw = atan2(siny_cosp, cosy_cosp);
+
+    // Convert radians to degrees
+    roll *= 180 / M_PI;
+    pitch *= 180 / M_PI;
+    yaw *= 180 / M_PI;
+}
+
+void spinAround(float speed) {
+  // Speed can be +1 or -1, +1 spins clockwise, -1 spins counterclockwise
+  
+  float speed1 = speed;
+  float speed2 = speed;
+  float speed3 = speed;
+  float speed4 = speed;
+
+  // Scale speeds to motor speed range (max is 90000000)
+  float maxSpeed = 45000000;
+
+  float scaledSpeed1 = speed1 * maxSpeed;
+  float scaledSpeed2 = speed2 * maxSpeed;
+  float scaledSpeed3 = speed3 * maxSpeed;
+  float scaledSpeed4 = speed4 * maxSpeed;
+  
+  motor1.setSpeed(scaledSpeed1);
+  motor2.setSpeed(scaledSpeed2);
+  motor3.setSpeed(scaledSpeed3);
+  motor4.setSpeed(scaledSpeed4);
+}
+
+void stopMoving() {
+  motor1.setSpeed(0);
+  motor2.setSpeed(0);
+  motor3.setSpeed(0);
+  motor4.setSpeed(0);
+}
+
 void setMotorSpeed(float angle) {
   // If the motors are at a special angle in design
   float motorAngle = 60 * (PI / 180.0);
@@ -59,6 +151,9 @@ void setMotorSpeed(float angle) {
   // Convert angle to radians
   float radian = (angle) * (PI / 180.0);
 
+  // Get heading correction from IMU
+  //headingCorrection = correctHeading();
+  
   // Calculate motor speeds
   float speed1 = cos(radian + PI/6);
   float speed2 = sin(radian + PI/3);
@@ -80,7 +175,7 @@ void setMotorSpeed(float angle) {
   Serial.println(speedMultiplier);
 
   // Scale speeds to motor speed range (max is 90000000)
-  float maxSpeed = 45000000;
+  float maxSpeed = 60000000;
 
   float scaledSpeed1 = speed1 * maxSpeed * speedMultiplier;
   float scaledSpeed2 = speed2 * maxSpeed * speedMultiplier;
@@ -98,9 +193,51 @@ void setMotorSpeed(float angle) {
   Serial.println(scaledSpeed2);
 }
 
+void correctHeading(float heading) {
+  // assuming heading is received from imu as pi to -pi, with 0 being straight (opposing wall)
+  // if not, then make it work !!!
+  //float headingCorrection = heading/PI;
+
+  // Scale speeds to motor speed range (max is 90000000)
+  float maxSpinSpeed = 30000000;
+
+  //float scaledHeadingCorrection = headingCorrection * maxSpinSpeed;
+  //return scaledHeadingCorrection;
+}
+
 void loop() {
-  // Set the desired angle here
-  float angle = 90; // Change this value to set a different angle
-  setMotorSpeed(angle);
-  delay(1000); // Adjust delay as needed
+  // Set the desired angle here (in degrees, 0-360)
+  float angle = 0; // Change this value to set a different angle
+  //spinAround(1); // Spin anticlockwise
+  //setMotorSpeed(angle);
+  delay(1); // Adjust delay as needed
+
+  if (bno08x.wasReset()) {
+    Serial.print("sensor was reset ");
+    setReports();
+  }
+
+  if (!bno08x.getSensorEvent(&sensorValue)) {
+    return;
+  }
+
+  if (sensorValue.sensorId == SH2_GEOMAGNETIC_ROTATION_VECTOR) {
+    float w = sensorValue.un.geoMagRotationVector.real;
+    float x = sensorValue.un.geoMagRotationVector.i;
+    float y = sensorValue.un.geoMagRotationVector.j;
+    float z = sensorValue.un.geoMagRotationVector.k;
+
+    float roll, pitch, yaw;
+    quaternionToEuler(w, x, y, z, roll, pitch, yaw);
+
+    Serial.print("Direction - Roll: ");
+    Serial.print(roll);
+    Serial.print(" degrees, Pitch: ");
+    Serial.print(pitch);
+    Serial.print(" degrees, Yaw: ");
+    Serial.println(yaw); // yaw is here!
+
+    spinAround(-yaw/180);
+  }
+  
 }
