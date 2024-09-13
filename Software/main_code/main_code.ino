@@ -152,12 +152,16 @@ void stopMoving() {
   motor4.setSpeed(0);
 }
 
-void setMotorSpeed(float angle, float rotation) {
+void setMotorSpeed(float xSpeed, float ySpeed, float rotation) {
   // If the motors are at a special angle in design
   float motorAngle = 60 * (PI / 180.0);
 
+  // Use the x and y speeds to create a resultant vector, and then find the angle it makes
+  // This angle value should be in radians
+  float angle = atan(ySpeed/xSpeed);
+  
   // Convert angle to radians
-  float radian = (angle) * (PI / 180.0);
+  //float radian = (angle) * (PI / 180.0);
 
   // Get heading correction from IMU
   //headingCorrection = correctHeading();
@@ -208,7 +212,7 @@ void correctHeading(float heading, float desiredHeading) {
   //float headingCorrection = heading/PI;
 
   // Scale speeds to motor speed range (max is 90000000)
-  float maxSpinSpeed = 30000000;
+  //float maxSpinSpeed = 30000000;
 
   rotation = abs((((desiredHeading - heading) % 360)-180)/180);
   if (desiredHeading - heading < 0) {
@@ -254,5 +258,5 @@ void loop() {
     correctHeading(yaw, 0);
     //spinAround(-yaw/180);
   }
-  setMotorSpeed(angle, );
+  setMotorSpeed(xSpeed, ySpeed, rotation);
 }
