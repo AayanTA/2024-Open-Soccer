@@ -87,14 +87,12 @@ void setup() {
 }
 
 
-
 void setReports(void) {
   Serial.println("Setting desired reports");
-  if (!bno08x.enableReport(SH2_GEOMAGNETIC_ROTATION_VECTOR)) {
-    Serial.println("Could not enable geomagnetic rotation vector");
+  if (!bno08x.enableReport(SH2_GAME_ROTATION_VECTOR)) {
+    Serial.println("Could not enable game rotation vector");
   }
 }
-
 
 void quaternionToEuler(float w, float x, float y, float z, float &roll, float &pitch, float &yaw) {
     // Roll (x-axis rotation)
@@ -115,6 +113,14 @@ void quaternionToEuler(float w, float x, float y, float z, float &roll, float &p
     roll *= 180 / M_PI;
     pitch *= 180 / M_PI;
     yaw *= 180 / M_PI;
+
+    // yaw is reversed (back of robot is 0) so convert
+    if (yaw <= 0) {
+      yaw += 180;
+    } else {
+      yaw -= 180;
+    }
+    
 }
 
 void spinAround(float speed) {
@@ -146,7 +152,7 @@ void stopMoving() {
   motor4.setSpeed(0);
 }
 
-void setMotorSpeed(float angle) {
+void setMotorSpeed(float angle, float rotation) {
   // If the motors are at a special angle in design
   float motorAngle = 60 * (PI / 180.0);
 
@@ -163,7 +169,6 @@ void setMotorSpeed(float angle) {
   float speed4 = -sin(radian + PI/3);
 
   // Calculate a multiplier to ensure motors are at maximum speed while maintaining angle ratio
-
   float speedMultiplier = 1;
 
   //Serial.println(speed1);
@@ -177,12 +182,14 @@ void setMotorSpeed(float angle) {
   Serial.println(speedMultiplier);
 
   // Scale speeds to motor speed range (max is 90000000)
-  float maxSpeed = 45000000;
+  float maxSpeed = 60000000;
+  // Scale speeds to motor speed range (max is 90000000)
+  float maxSpinSpeed = 30000000;
 
-  float scaledSpeed1 = speed1 * maxSpeed * speedMultiplier + headingCorrection;
-  float scaledSpeed2 = speed2 * maxSpeed * speedMultiplier + headingCorrection;
-  float scaledSpeed3 = speed3 * maxSpeed * speedMultiplier + headingCorrection;
-  float scaledSpeed4 = speed4 * maxSpeed * speedMultiplier + headingCorrection;
+  float scaledSpeed1 = speed1 * maxSpeed * speedMultiplier + rotation * maxSpinSpeed;
+  float scaledSpeed2 = speed2 * maxSpeed * speedMultiplier + rotation * maxSpinSpeed;
+  float scaledSpeed3 = speed3 * maxSpeed * speedMultiplier + rotation * maxSpinSpeed;
+  float scaledSpeed4 = speed4 * maxSpeed * speedMultiplier + rotation * maxSpinSpeed;
 
   // Set the motor speeds
   motor1.setSpeed(scaledSpeed1);
@@ -195,7 +202,7 @@ void setMotorSpeed(float angle) {
   Serial.println(scaledSpeed2);
 }
 
-void correctHeading(float heading) {
+void correctHeading(float heading, float desiredHeading) {
   // assuming heading is received from imu as pi to -pi, with 0 being straight (opposing wall)
   // if not, then make it work !!!
   //float headingCorrection = heading/PI;
@@ -203,13 +210,15 @@ void correctHeading(float heading) {
   // Scale speeds to motor speed range (max is 90000000)
   float maxSpinSpeed = 30000000;
 
-  headingCorrection = heading * maxSpinSpeed;
+  rotation = -(abs(desiredHeading - heading))/180;
+
+  //headingCorrection = rotation * maxSpinSpeed;
   //return scaledHeadingCorrection;
 }
 
 void loop() {
   // Set the desired angle here (in degrees, 0-360)
-  float angle = 0; // Change this value to set a different angle
+  float angle = 180; // Change this value to set a different angle
   //spinAround(1); // Spin anticlockwise
   //setMotorSpeed(angle);
   delay(1); // Adjust delay as needed
@@ -223,11 +232,11 @@ void loop() {
     return;
   }
 
-  if (sensorValue.sensorId == SH2_GEOMAGNETIC_ROTATION_VECTOR) {
-    float w = sensorValue.un.geoMagRotationVector.real;
-    float x = sensorValue.un.geoMagRotationVector.i;
-    float y = sensorValue.un.geoMagRotationVector.j;
-    float z = sensorValue.un.geoMagRotationVector.k;
+  if (sensorValue.sensorId == SH2_GAME_ROTATION_VECTOR) {
+    float w = sensorValue.un.gameRotationVector.real;
+    float x = sensorValue.un.gameRotationVector.i;
+    float y = sensorValue.un.gameRotationVector.j;
+    float z = sensorValue.un.gameRotationVector.k;
 
     float roll, pitch, yaw;
     quaternionToEuler(w, x, y, z, roll, pitch, yaw);
@@ -239,8 +248,8 @@ void loop() {
     Serial.print(" degrees, Yaw: ");
     Serial.println(yaw); // yaw is here!
 
-    correctHeading(-yaw/180);
+    correctHeading(yaw, 0);
     //spinAround(-yaw/180);
   }
-  setMotorSpeed(angle);
+  setMotorSpeed(angle, );
 }
