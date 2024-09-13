@@ -172,13 +172,13 @@ void setMotorSpeed(float angle, float rotation) {
   float speedMultiplier = 1;
 
   //Serial.println(speed1);
-
-  if ( abs(speed1) > abs(speed2) ) {
+  speedMultiplier = 1.0/max(abs(speed1), abs(speed2), abs(speed3), abs(speed4))
+  /*if ( abs(speed1) > abs(speed2) ) {
     speedMultiplier = 1.0/abs(speed1);
   } 
   else( abs(speed2) > abs(speed1) ); {
     speedMultiplier = 1.0/abs(speed2);
-  }
+  }*/
   Serial.println(speedMultiplier);
 
   // Scale speeds to motor speed range (max is 90000000)
@@ -203,14 +203,17 @@ void setMotorSpeed(float angle, float rotation) {
 }
 
 void correctHeading(float heading, float desiredHeading) {
-  // assuming heading is received from imu as pi to -pi, with 0 being straight (opposing wall)
+  // assuming heading is received from imu as 180 to -180, with 0 being straight (opposing wall)
   // if not, then make it work !!!
   //float headingCorrection = heading/PI;
 
   // Scale speeds to motor speed range (max is 90000000)
   float maxSpinSpeed = 30000000;
 
-  rotation = -(abs(desiredHeading - heading))/180;
+  rotation = abs((((desiredHeading - heading) % 360)-180)/180);
+  if (desiredHeading - heading < 0) {
+    rotation *= -1
+  }
 
   //headingCorrection = rotation * maxSpinSpeed;
   //return scaledHeadingCorrection;
@@ -218,7 +221,7 @@ void correctHeading(float heading, float desiredHeading) {
 
 void loop() {
   // Set the desired angle here (in degrees, 0-360)
-  float angle = 180; // Change this value to set a different angle
+  float angle = 0; // Change this value to set a different angle
   //spinAround(1); // Spin anticlockwise
   //setMotorSpeed(angle);
   delay(1); // Adjust delay as needed
