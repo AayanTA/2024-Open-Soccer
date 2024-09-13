@@ -167,10 +167,10 @@ void setMotorSpeed(float xSpeed, float ySpeed, float rotation) {
   //headingCorrection = correctHeading();
   
   // Calculate motor speeds
-  float speed1 = cos(radian + PI/6);
-  float speed2 = sin(radian + PI/3);
-  float speed3 = -cos(radian + PI/6);
-  float speed4 = -sin(radian + PI/3);
+  float speed1 = cos(angle + PI/6);
+  float speed2 = sin(angle + PI/3);
+  float speed3 = -cos(angle + PI/6);
+  float speed4 = -sin(angle + PI/3);
 
   // Calculate a multiplier to ensure motors are at maximum speed while maintaining angle ratio
   float speedMultiplier = 1;
@@ -225,7 +225,9 @@ void correctHeading(float heading, float desiredHeading) {
 
 void loop() {
   // Set the desired angle here (in degrees, 0-360)
-  float angle = 0; // Change this value to set a different angle
+  //float angle = 0; // Change this value to set a different angle
+  float xSpeed = 100;
+  float ySpeed = 100;
   //spinAround(1); // Spin anticlockwise
   //setMotorSpeed(angle);
   delay(1); // Adjust delay as needed
